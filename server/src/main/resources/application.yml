@@ -1,0 +1,15 @@
+server:
+  port: 8080
+
+spring:
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    default-property-inclusion: always
+
+yeopjari:
+  zone: Asia/Seoul
+  # 가족 웹(React) 개발 서버 주소. 배포 주소가 생기면 쉼표로 추가.
+  cors-origins: http://localhost:5173,http://127.0.0.1:5173
+  # 서버를 켤 때 시연 데이터(김씨 가족)를 채울지
+  seed-demo: true
