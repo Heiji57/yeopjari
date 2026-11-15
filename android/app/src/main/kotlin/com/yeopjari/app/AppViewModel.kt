@@ -23,6 +23,7 @@ import com.yeopjari.core.model.PlannedSpot
 import com.yeopjari.core.scenario.DriveSignalSource
 import com.yeopjari.core.scenario.Scenario
 import com.yeopjari.core.scenario.ScenarioReplaySource
+import com.yeopjari.core.sync.FallbackYeopjariApi
 import com.yeopjari.core.sync.HttpYeopjariApi
 import com.yeopjari.core.sync.ParkingAdviceDto
 import com.yeopjari.core.sync.ReportDto
@@ -80,7 +81,12 @@ sealed interface Screen {
 
 class AppViewModel(app: Application) : AndroidViewModel(app) {
 
-    private val api = HttpYeopjariApi(BuildConfig.API_BASE)
+    /** 서버를 먼저 쓰고, 서버가 없으면 앱에 내장된 시연 데이터로 (APK 만 설치해도 시연이 끝까지 된다) */
+    private val api = FallbackYeopjariApi(HttpYeopjariApi(BuildConfig.API_BASE))
+
+    /** 서버 없이 내장 시연 데이터로 도는 중인지 */
+    var offline by mutableStateOf(false)
+        private set
     private val speaker = Speaker(app)
     private val navigator: RouteNavigator = if (BuildConfig.USE_PLEOS_SDK) PleosNavigator(app) else LoggingNavigator()
 
@@ -149,6 +155,7 @@ class AppViewModel(app: Application) : AndroidViewModel(app) {
                     Screen.Preview(preview, parking, insights)
                 }
             }
+            offline = api.isOffline
             screen = result.getOrElse { Screen.Error("서버에 연결하지 못했어요 (${BuildConfig.API_BASE})\n${it.message}") }
             (screen as? Screen.Preview)?.let { if (profile.mode == DriverMode.SENIOR) speakInsights(it) }
         }

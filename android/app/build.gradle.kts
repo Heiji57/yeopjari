@@ -23,6 +23,14 @@ android {
         buildConfigField("boolean", "USE_PLEOS_SDK", usePleosSdk.toString())
     }
 
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+            // 대회 제출용: 별도 키 없이 바로 설치되도록 디버그 키로 서명한다 (스토어 배포 전에는 릴리스 키로 바꾼다)
+            signingConfig = signingConfigs.getByName("debug")
+        }
+    }
+
     buildFeatures {
         compose = true
         buildConfig = true

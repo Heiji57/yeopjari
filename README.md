@@ -12,6 +12,29 @@
 
 ---
 
+## 심사용: 가장 빨리 보는 방법 (APK 만)
+
+| 항목 | 내용 |
+|---|---|
+| **APK** | [`apk/옆자리팀_옆자리_release.apk`](apk/) (release · 바로 설치 가능하게 서명됨) |
+| **테스트 환경** | **Pleos Connect Emulator v2.1.0** (`system-images;android-34;pleos_car_emulator;x86_64`, Android 14 / API 34) |
+| **화면 규격** | **2560 × 1440, mdpi(160dpi)**, 가로 — 앱은 오른쪽 앱 영역(약 1700 × 1300)에 맞춰 커져요 |
+| **앱 요구** | minSdk 28 · targetSdk 34 · 인터넷 권한만 사용 |
+
+```bash
+adb install -r "apk/옆자리팀_옆자리_release.apk"
+adb shell am start -n com.yeopjari.app/.MainActivity
+```
+
+- **서버 없이도 끝까지 동작해요.** 서버(`http://10.0.2.2:8080`)에 연결되지 않으면 앱에 내장된 시연 데이터로 바뀌고,
+  오른쪽 위에 `시연 모드 · 서버 없이 내장 데이터` 가 보여요. 숫자는 서버 시연 데이터와 같아요 (`OfflineDemoTest` 가 확인).
+- 시연 흐름: **소연**(초보) → `안내 시작` → 지도 위 3D 차가 시나리오대로 주행(약 40초) → 도착 리포트 /
+  오른쪽 위 탭에서 **아버지**(시니어) → 차 안 제안 `들를게요` → `안내 시작`
+- 차량 데이터는 **시나리오 재생 모드**예요 (`gradle.properties` → `yeopjari.usePleosSdk=false`). Pleos Vehicle SDK · NaviHelper 연결부는 `android/app/.../platform/PleosAdapters.kt` 에 있고, SDK 승인 후 채워요.
+- 가족 웹과 서버까지 같이 보려면 아래 "직접 실행하기" 순서대로 켜 주세요.
+
+---
+
 ## 폴더 구조
 
 ```
@@ -36,14 +59,17 @@ yeopjari/
 
 ---
 
-## 빠르게 실행하기
+## 직접 실행하기
+
+필요한 것: **JDK 21** (서버), **JDK 17** + Android SDK 35 (앱, Android Studio 에 포함), **Node 18+** (가족 웹).
+Maven · Gradle 은 따로 설치하지 않아도 돼요 (저장소에 래퍼 포함).
 
 ### 1. 서버 (Spring)
 
 ```bash
 cd server
-mvn spring-boot:run          # http://localhost:8080
-mvn test                     # 도메인 테스트 + API 흐름 테스트
+./mvnw spring-boot:run       # http://localhost:8080   (Windows: mvnw.cmd spring-boot:run)
+./mvnw test                  # 도메인 테스트 + API 흐름 테스트 (23개)
 ```
 
 켜지면 시연 데이터(김씨 가족)가 자동으로 채워져요.
@@ -66,26 +92,27 @@ npm run dev                  # http://localhost:5173
 
 1. Android Studio 에서 `android/` 폴더 열기 (Gradle 동기화)
 2. Pleos Connect Emulator 실행 ([설치 가이드](https://document.pleos.ai/en/docs/connect/guide/getting-started/application-development/setup-connect-sdk-emulator))
-3. 서버를 PC 에서 켠 상태로 `app` 실행 → 에뮬레이터는 `http://10.0.2.2:8080` 으로 PC 서버에 붙어요
+3. 서버를 PC 에서 켠 상태로 `app` 실행 → 에뮬레이터는 `http://10.0.2.2:8080` 으로 PC 서버에 붙어요 (서버가 없으면 내장 시연 데이터)
 4. 기본값은 **시나리오 모드** (`gradle.properties` → `yeopjari.usePleosSdk=false`)
 
 ```bash
 cd android
-./gradlew :core:test         # 이벤트 감지·음성 코치·시나리오 테스트
+./gradlew :core:test           # 이벤트 감지·음성 코치·시나리오·오프라인 테스트 (17개)
 ./gradlew :app:installDebug
+./gradlew :app:assembleRelease # → app/build/outputs/apk/release/app-release.apk (디버그 키로 서명)
 ```
 
 ---
 
 ## 발표 시연 대본 (약 3분)
 
-> 2번에서 **쉬운 길**을 눌러도 돼요: 예습이 "쉬운 길 · 긴장 구간 1곳(스쿨존)"으로 바뀌고, 강변북로 없이 시내로 달려요 (`DemoScenarios.soyeonEasyRoute`). 이때 리포트에는 "첫 합류 성공"이 없어요 — 대본대로 가려면 "이대로 출발".
+> 2번에서 **쉬운 길**을 눌러도 돼요: 예습이 "쉬운 길 · 긴장 구간 1곳(스쿨존)"으로 바뀌고, 강변북로 없이 시내로 달려요 (`DemoScenarios.soyeonEasyRoute`). 이때 리포트에는 "첫 합류 성공"이 없어요 — 대본대로 가려면 "안내 시작".
 
 | # | 화면 | 하는 일 | 보여줄 것 |
 |---|---|---|---|
 | 1 | 차량 앱 · P단 | 소연이로 시작 | **오늘 긴장 구간 3곳**: 합류 후 바로 1차로 / 우회전 후 100m 좌회전 / 스쿨존 60→30 |
 | 2 | 〃 | 오른쪽 위 | **쉬운 길 +4분 · 긴장 구간 3→1** 버튼, 주차: ○○몰 지하 ★★★★ (후진 평균 5번) → 도보 3분 평면 ★ 추천 |
-| 3 | 〃 | "이대로 출발" (오늘은 도전!) | 시나리오 6배속 재생, 약 40초 (음성이 나오는 구간은 실제 속도에 가깝게 늘려 둬서 말이 화면보다 늦지 않아요) |
+| 3 | 〃 | "안내 시작" (오늘은 도전!) | 시나리오 6배속 재생, 약 40초 (음성이 나오는 구간은 실제 속도에 가깝게 늘려 둬서 말이 화면보다 늦지 않아요) |
 | 4 | 차량 앱 · D단 | 음성 | "500m 뒤 합류예요. 지금 오른쪽 차로로 가 있을게요" → "왼쪽 깜빡이 켜볼까요?" → "곧 스쿨존이에요. 30으로 천천히 갈게요" |
 | 5 | 차량 앱 · P단 | 주차 끝 → 자동 리포트 | **긴장 구간 3/3 · 깜빡이 92% ↑ · 주차 후진 5→2번 ↓ · 첫 강변북로 합류 성공** (점수·감점 없음) |
 | 6 | 가족 웹 (폰) | 새로고침 | 🎉 **소연이 첫 강변북로 합류 성공** 카드가 맨 위에 |
@@ -187,19 +214,15 @@ r = 0.5 × min(평균 후진/6, 1) + 0.3 × min((평균 시간−60초)/240초, 
 
 ---
 
-## 지금 상태: 검증된 것 / 직접 해야 할 것
-
-개발 환경 제약(외부 저장소 차단)으로 Spring Boot·Android 전체 빌드는 아직 못 돌렸어요. 대신 이렇게 확인했어요.
+## 지금 상태: 검증된 것 (2026-11-15)
 
 | 부분 | 확인 방법 | 결과 |
 |---|---|---|
-| 서버 도메인 로직 | JUnit 테스트 17개 | ✅ 통과 |
-| 서버 컨트롤러 12개 | 실제 컨트롤러 코드를 HTTP 로 띄워 전 엔드포인트 호출 | ✅ 정상, 404/400 포함 |
-| Android core | Kotlin 2.0 컴파일 + JUnit 4 테스트 10개 | ✅ 통과 |
-| **처음부터 끝까지** | core 의 시나리오·감지기·음성 코치·HTTP 클라이언트 → 실제 서버 | ✅ 대본 1~8번 숫자·문구 그대로 |
-| 가족 웹 | `tsc` + `vite build`, 폰 크기 브라우저에서 피드·공유 토글·오프라인 | ✅ |
-| **Android app 모듈 (Compose 화면·TTS)** | 아직 빌드 안 함 | ⚠️ **1일차에 Android Studio 로 빌드해서 확인** |
-| `mvn test` 의 `ApiFlowTest` (Spring 컨텍스트) | 아직 안 돌림 | ⚠️ 1일차에 `mvn test` |
+| 서버 | `./mvnw test` — 도메인 20개 + Spring 컨텍스트로 띄운 `ApiFlowTest` 3개 | ✅ 23개 통과 |
+| Android core | `./gradlew :core:test` — 감지기·음성 코치·시나리오·6배속 타이밍·오프라인 시연 | ✅ 17개 통과 |
+| Android app | `assembleDebug` · `assembleRelease` 빌드, Pleos Connect Emulator v2.1.0 에서 실행 | ✅ 길 예습 → 주행 → 리포트 확인 |
+| 가족 웹 | `npm run build` | ✅ |
+| 남은 것 | Pleos Vehicle SDK · NaviHelper 실제 연결 (SDK 승인 후), 가상 콘솔로 실차 신호 시연 | ⚠️ |
 
 ---
 
@@ -210,7 +233,7 @@ r = 0.5 × min(평균 후진/6, 1) + 0.3 × min((평균 시간−60초)/240초, 
 - [ ] **(Android)** `android/` 를 Android Studio 로 빌드·실행 (app 모듈 첫 빌드)
 - [ ] **(Android)** 버추얼 콘솔 확인: 기어·브레이크·깜빡이·TPMS 는 문서상 ✅ / **차속 카드는 목록에 없음** → 직접 확인
 - [ ] **(Android)** NaviHelper `getTBTInfo` 가 **다음 안내 1개만** 주는지, **경로 전체 안내 목록**을 받을 방법이 있는지 확인 → 아래 리스크 1
-- [ ] **(Spring)** `mvn test`, `mvn spring-boot:run`
+- [x] **(Spring)** `./mvnw test`, `./mvnw spring-boot:run`
 - [ ] **(React)** `npm run dev` 로 서버 붙여 보기
 
 ### 3~6일차: MVP ① 길 예습 ② 도착 리포트 ③ 가족 웹

@@ -140,7 +140,7 @@ private fun Header(vm: AppViewModel) {
             }
             Spacer(Modifier.width(16.dp))
         }
-        Text("시연 모드", fontSize = 12.sp, color = C.InkFaint)
+        Text(if (vm.offline) "시연 모드 · 서버 없이 내장 데이터" else "시연 모드", fontSize = 12.sp, color = C.InkFaint)
     }
 }
 
